@@ -33,10 +33,19 @@ async function main() {
 
   for (const u of defaults) {
     await prisma.user.upsert({
-      where:  { email: u.email },
-      update: {},
-      create: { ...u, role: u.role as any, isApproved: true },
-    });
+  where: { email: u.email },
+  update: u.role === "ADMIN"
+    ? {
+        password: u.password,
+        isApproved: true,
+      }
+    : {},
+  create: {
+    ...u,
+    role: u.role as any,
+    isApproved: true,
+  },
+});
   }
 
   console.log("✅ Default accounts seeded");
