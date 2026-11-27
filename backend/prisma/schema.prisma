@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(cuid())
+  name              String
+  email             String          @unique
+  password          String
+  role              Role            @default(EMPLOYEE)
+  department        String
+  grade             Int             @default(1)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  isApproved        Boolean         @default(false)
+  plant             String?         @default("Palwal Plant")
+  directorApprovals TravelRequest[] @relation("DirectorApprovals")
+  travelRequests    TravelRequest[] @relation("EmployeeRequests")
+  hodApprovals      TravelRequest[] @relation("HODApprovals")
+  managedRequests   TravelRequest[] @relation("TravelManagerRequests")
+}
+
+model TravelRequest {
+  id                       String        @id @default(cuid())
+  employeeId               String
+  hodId                    String?
+  directorId               String?
+  travelManagerId          String?
+  ticketFile               String?
+  ticketUploadedAt         DateTime?
+  employeeName             String
+  department               String
+  travelType               TravelType
+  fromLocation             String
+  toLocation               String
+  fromDate                 DateTime
+  toDate                   DateTime
+  purposeOfVisit           String
+  accommodation            Boolean       @default(false)
+  transportMode            String?
+  estimatedCost            Float?
+  additionalNotes          String?
+  status                   RequestStatus @default(PENDING_HOD)
+  hodComment               String?
+  hodApprovedAt            DateTime?
+  directorComment          String?
+  directorApprovedAt       DateTime?
+  travelManagerComment     String?
+  travelManagerProcessedAt DateTime?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+  director                 User?         @relation("DirectorApprovals", fields: [directorId], references: [id])
+  employee                 User          @relation("EmployeeRequests", fields: [employeeId], references: [id], onDelete: Cascade)
+  hod                      User?         @relation("HODApprovals", fields: [hodId], references: [id])
+  travelManager            User?         @relation("TravelManagerRequests", fields: [travelManagerId], references: [id])
+}
+
+enum Role {
+  EMPLOYEE
+  HOD
+  DIRECTOR
+  TRAVEL_MANAGER
+  ADMIN
+}
+
+enum TravelType {
+  INTER_COMPANY
+  OUTSIDE
+}
+
+enum RequestStatus {
+  PENDING_HOD
+  PENDING_DIRECTOR
+  PENDING_TRAVEL_MANAGER
+  APPROVED
+  REJECTED
+}
