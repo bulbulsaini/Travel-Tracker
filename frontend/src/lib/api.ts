@@ -2,13 +2,15 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "/api",
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
-  if (token) {
+  if (token && token !== "undefined") {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -21,9 +23,6 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const requestUrl = String(error.config?.url ?? "");
 
-    // Only clear the session for unauthorized protected requests.
-    // Invalid login credentials should remain on the login page
-    // without triggering a forced redirect.
     if (
       status === 401 &&
       !requestUrl.includes("/auth/login") &&
